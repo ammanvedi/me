@@ -16,13 +16,13 @@ interface TextBody {
 }
 
 const blogPosts = [
-  { title: "Robust Chat @ Scale", date: "2026-01-29", href: "/blog/robust-chat-at-scale" },
+  { title: "Robust Chat @ Scale", date: "2026-01-29", href: "https://codewords.ai/blog/building-robust-chat-at-scale" },
 ];
 
 const MOVEMENT_THRESHOLD = 5;
 
 // Full description text - will be split dynamically based on width
-const DESCRIPTION_TEXT = "I'm a product & software engineer interested in agentic systems, design systems. I studied comp sci @ UCL and work on everything front end @ CodeWords";
+const DESCRIPTION_TEXT = "Hey! I'm a product engineer based in London, interested in agentic systems, design systems and bringing people joy through software. I studied comp sci @ UCL and work on everything front end @ codewords";
 
 // Calculate responsive font sizes and line breaks based on container width
 function getResponsiveConfig(containerWidth: number) {
@@ -124,7 +124,7 @@ export default function Home() {
     // Title lines - positioned relative to hero section
     const titleLines = [
       { text: 'AMMAN VEDI', fontSize: titleFontSize, y: offsetY + 50 },
-      { text: 'SOFTWARE ENGINEER', fontSize: titleFontSize, y: offsetY + 50 + lineHeight },
+      { text: 'PRODUCT ENGINEER', fontSize: titleFontSize, y: offsetY + 50 + lineHeight },
     ];
 
     // Description lines - start after title with some gap
