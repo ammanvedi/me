@@ -404,10 +404,7 @@ export default function Home() {
   }, [createLetterBodies, createWalls, checkForMovement]);
 
   return (
-    <main 
-      className="bg-[#FAF6F0] grid min-h-screen-safe"
-      style={{ gridTemplateRows: '1fr auto' }}
-    >
+    <main className="min-h-dvh bg-[#FAF6F0] flex flex-col">
       {/* Full-screen physics canvas layer */}
       <div 
         ref={sceneRef} 
@@ -415,8 +412,9 @@ export default function Home() {
         style={{ pointerEvents: 'none' }}
       />
       
-      {/* Main content - vertically centered */}
-      <div className="max-w-2xl mx-auto px-6 relative w-full flex flex-col justify-center">
+      <div className="max-w-2xl mx-auto px-6 relative flex-1 flex flex-col w-full">
+        {/* Main content - vertically centered */}
+        <div className="flex-1 flex flex-col justify-center">
           {/* Hero + Description Section - invisible placeholder for layout */}
           <div ref={heroRef} className="relative w-full h-[320px] sm:h-[280px] md:h-[240px]">
             {/* Shadow text - reserves space, invisible */}
@@ -463,10 +461,9 @@ export default function Home() {
               ))}
             </div>
           </motion.section>
-      </div>
+        </div>
 
-      {/* Email Subscription */}
-      <div className="max-w-2xl mx-auto px-6 w-full">
+        {/* Email Subscription */}
         <motion.section
           className="py-8 border-t border-[#1E3A8A]/10"
           initial={{ opacity: 0, y: 10 }}
