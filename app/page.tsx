@@ -4,6 +4,7 @@ import { useEffect, useRef, useCallback, useState } from 'react';
 import Matter from 'matter-js';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'motion/react';
+import confetti from 'canvas-confetti';
 
 interface TextBody {
   body: Matter.Body;
@@ -92,6 +93,11 @@ export default function Home() {
       if (res.ok) {
         setSubscribeStatus('success');
         setEmail('');
+        confetti({
+          particleCount: 100,
+          spread: 70,
+          origin: { y: 0.9 },
+        });
       } else {
         setSubscribeStatus('error');
       }
@@ -398,7 +404,7 @@ export default function Home() {
   }, [createLetterBodies, createWalls, checkForMovement]);
 
   return (
-    <main className="min-h-screen bg-[#FAF6F0]">
+    <main className="min-h-screen bg-[#FAF6F0] flex flex-col">
       {/* Full-screen physics canvas layer */}
       <div 
         ref={sceneRef} 
@@ -406,7 +412,7 @@ export default function Home() {
         style={{ pointerEvents: 'none' }}
       />
       
-      <div className="max-w-2xl mx-auto px-6 relative">
+      <div className="max-w-2xl mx-auto px-6 relative flex-1 flex flex-col w-full">
         {/* Hero + Description Section - invisible placeholder for layout */}
         <div ref={heroRef} className="relative w-full h-[320px] sm:h-[280px] md:h-[240px]">
           {/* Shadow text - reserves space, invisible */}
@@ -427,11 +433,12 @@ export default function Home() {
 
         {/* Blog Posts Section */}
         <motion.section 
-          className="py-8"
+          className="pt-2 pb-8"
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.6 }}
         >
+          <h3 className="font-mono text-[12px] text-[#1E3A8A]/50 mb-4">natterings</h3>
           <div className="space-y-6">
             {blogPosts.map((post, index) => (
               <motion.article 
@@ -455,13 +462,13 @@ export default function Home() {
 
         {/* Email Subscription */}
         <motion.section
-          className="py-8 border-t border-[#1E3A8A]/10"
+          className="py-8 border-t border-[#1E3A8A]/10 mt-auto"
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 1.0 }}
         >
           {subscribeStatus === 'success' ? (
-            <p className="font-mono text-[14px] text-[#1E3A8A]">subscribed!</p>
+            <p className="font-mono text-[16px] md:text-[14px] text-[#1E3A8A]">did we just become best friends?</p>
           ) : (
             <form onSubmit={handleSubscribe} className="flex gap-3">
               <input
@@ -471,19 +478,19 @@ export default function Home() {
                 placeholder="your@email.com"
                 required
                 disabled={subscribeStatus === 'loading'}
-                className="flex-1 font-mono text-[14px] text-[#1E3A8A] bg-transparent border-b border-[#1E3A8A]/30 py-2 px-0 placeholder:text-[#1E3A8A]/40 focus:outline-none focus:border-[#1E3A8A] transition-colors disabled:opacity-50"
+                className="flex-1 font-mono text-[16px] text-[#1E3A8A] bg-transparent border-b border-[#1E3A8A]/30 py-2 px-0 placeholder:text-[#1E3A8A]/40 focus:outline-none focus:border-[#1E3A8A] transition-colors disabled:opacity-50"
               />
               <button
                 type="submit"
                 disabled={subscribeStatus === 'loading'}
-                className="font-mono text-[14px] text-[#1E3A8A] hover:underline disabled:opacity-50 disabled:no-underline"
+                className="font-mono text-[16px] md:text-[14px] text-[#1E3A8A] hover:underline disabled:opacity-50 disabled:no-underline"
               >
                 {subscribeStatus === 'loading' ? '...' : 'subscribe'}
               </button>
             </form>
           )}
           {subscribeStatus === 'error' && (
-            <p className="font-mono text-[12px] text-red-600 mt-2">something went wrong, try again</p>
+            <p className="font-mono text-[14px] md:text-[12px] text-red-600 mt-2">something went wrong, try again</p>
           )}
         </motion.section>
       </div>
