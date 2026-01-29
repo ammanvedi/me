@@ -404,7 +404,10 @@ export default function Home() {
   }, [createLetterBodies, createWalls, checkForMovement]);
 
   return (
-    <main className="min-h-screen bg-[#FAF6F0] flex flex-col">
+    <main 
+      className="bg-[#FAF6F0] grid min-h-screen-safe"
+      style={{ gridTemplateRows: '1fr auto' }}
+    >
       {/* Full-screen physics canvas layer */}
       <div 
         ref={sceneRef} 
@@ -412,57 +415,60 @@ export default function Home() {
         style={{ pointerEvents: 'none' }}
       />
       
-      <div className="max-w-2xl mx-auto px-6 relative flex-1 flex flex-col w-full">
-        {/* Hero + Description Section - invisible placeholder for layout */}
-        <div ref={heroRef} className="relative w-full h-[320px] sm:h-[280px] md:h-[240px]">
-          {/* Shadow text - reserves space, invisible */}
-          <div className="invisible flex flex-col items-start justify-start pt-[50px] h-full font-mono">
-            <span className="text-[20px] sm:text-[18px] md:text-[16px] leading-[28px] sm:leading-[26px] md:leading-[24px] font-semibold">AMMAN VEDI</span>
-            <span className="text-[20px] sm:text-[18px] md:text-[16px] leading-[28px] sm:leading-[26px] md:leading-[24px] font-semibold">SOFTWARE ENGINEER</span>
-            <div className="mt-10 text-[16px] sm:text-[15px] md:text-[14px] leading-[24px] sm:leading-[23px] md:leading-[22px]">
-              {/* Placeholder lines - actual content rendered by Matter.js */}
-              <span className="block">Line placeholder</span>
-              <span className="block">Line placeholder</span>
-              <span className="block">Line placeholder</span>
-              <span className="block">Line placeholder</span>
-              <span className="block">Line placeholder</span>
-              <span className="block">Line placeholder</span>
+      {/* Main content - vertically centered */}
+      <div className="max-w-2xl mx-auto px-6 relative w-full flex flex-col justify-center">
+          {/* Hero + Description Section - invisible placeholder for layout */}
+          <div ref={heroRef} className="relative w-full h-[320px] sm:h-[280px] md:h-[240px]">
+            {/* Shadow text - reserves space, invisible */}
+            <div className="invisible flex flex-col items-start justify-start pt-[50px] h-full font-mono">
+              <span className="text-[20px] sm:text-[18px] md:text-[16px] leading-[28px] sm:leading-[26px] md:leading-[24px] font-semibold">AMMAN VEDI</span>
+              <span className="text-[20px] sm:text-[18px] md:text-[16px] leading-[28px] sm:leading-[26px] md:leading-[24px] font-semibold">SOFTWARE ENGINEER</span>
+              <div className="mt-10 text-[16px] sm:text-[15px] md:text-[14px] leading-[24px] sm:leading-[23px] md:leading-[22px]">
+                {/* Placeholder lines - actual content rendered by Matter.js */}
+                <span className="block">Line placeholder</span>
+                <span className="block">Line placeholder</span>
+                <span className="block">Line placeholder</span>
+                <span className="block">Line placeholder</span>
+                <span className="block">Line placeholder</span>
+                <span className="block">Line placeholder</span>
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* Blog Posts Section */}
-        <motion.section 
-          className="pt-2 pb-8"
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.6 }}
-        >
-          <h3 className="font-mono text-[12px] text-[#1E3A8A]/50 mb-4">natterings</h3>
-          <div className="space-y-6">
-            {blogPosts.map((post, index) => (
-              <motion.article 
-                key={index}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4, delay: 0.8 + index * 0.1 }}
-              >
-                <Link href={post.href} className="group block">
-                  <h2 className="font-mono text-[14px] font-medium text-[#1E3A8A] group-hover:underline">
-                    {post.title}
-                  </h2>
-                  <time className="font-mono text-[12px] text-[#1E3A8A]/60">
-                    {post.date}
-                  </time>
-                </Link>
-              </motion.article>
-            ))}
-          </div>
-        </motion.section>
+          {/* Blog Posts Section */}
+          <motion.section 
+            className="pt-2 pb-8"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.6 }}
+          >
+            <h3 className="font-mono text-[12px] text-[#1E3A8A]/50 mb-4">natterings</h3>
+            <div className="space-y-6">
+              {blogPosts.map((post, index) => (
+                <motion.article 
+                  key={index}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4, delay: 0.8 + index * 0.1 }}
+                >
+                  <Link href={post.href} className="group block">
+                    <h2 className="font-mono text-[14px] font-medium text-[#1E3A8A] group-hover:underline">
+                      {post.title}
+                    </h2>
+                    <time className="font-mono text-[12px] text-[#1E3A8A]/60">
+                      {post.date}
+                    </time>
+                  </Link>
+                </motion.article>
+              ))}
+            </div>
+          </motion.section>
+      </div>
 
-        {/* Email Subscription */}
+      {/* Email Subscription */}
+      <div className="max-w-2xl mx-auto px-6 w-full">
         <motion.section
-          className="py-8 border-t border-[#1E3A8A]/10 mt-auto"
+          className="py-8 border-t border-[#1E3A8A]/10"
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 1.0 }}
