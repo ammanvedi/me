@@ -281,7 +281,24 @@ export default function Home() {
       }
     };
 
+    const handleTouchMove = (event: TouchEvent) => {
+      if (mouseBodyRef.current && render.canvas && event.touches.length > 0) {
+        const touch = event.touches[0];
+        const rect = render.canvas.getBoundingClientRect();
+        const x = touch.clientX - rect.left;
+        const y = touch.clientY - rect.top;
+        Body.setPosition(mouseBodyRef.current, { x, y });
+      }
+    };
+
+    const handleTouchStart = (event: TouchEvent) => {
+      // Same as touch move - position the pusher at touch point
+      handleTouchMove(event);
+    };
+
     render.canvas.addEventListener('mousemove', handleMouseMove);
+    render.canvas.addEventListener('touchmove', handleTouchMove, { passive: true });
+    render.canvas.addEventListener('touchstart', handleTouchStart, { passive: true });
 
     Events.on(render, 'afterRender', () => {
       const ctx = render.context;
@@ -339,6 +356,8 @@ export default function Home() {
     return () => {
       window.removeEventListener('resize', handleResize);
       render.canvas.removeEventListener('mousemove', handleMouseMove);
+      render.canvas.removeEventListener('touchmove', handleTouchMove);
+      render.canvas.removeEventListener('touchstart', handleTouchStart);
       Render.stop(render);
       Runner.stop(runner);
       World.clear(engine.world, false);
