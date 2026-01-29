@@ -19,7 +19,6 @@ const blogPosts = [
 ];
 
 const MOVEMENT_THRESHOLD = 5;
-const CANVAS_EXTENSION = 200; // How much canvas extends beyond container on each side
 
 // Full description text - will be split dynamically based on width
 const DESCRIPTION_TEXT = "I'm a product & software engineer interested in agentic systems, design systems. I studied comp sci @ UCL and work on everything front end @ CodeWords";
@@ -75,8 +74,33 @@ export default function Home() {
   const hasBeenTouchedRef = useRef<boolean>(false);
   
   const [showResetButton, setShowResetButton] = useState(false);
+  const [email, setEmail] = useState('');
+  const [subscribeStatus, setSubscribeStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
 
-  const createLetterBodies = useCallback((containerWidth: number) => {
+  const handleSubscribe = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email || subscribeStatus === 'loading') return;
+
+    setSubscribeStatus('loading');
+    try {
+      const res = await fetch('/api/subscribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
+
+      if (res.ok) {
+        setSubscribeStatus('success');
+        setEmail('');
+      } else {
+        setSubscribeStatus('error');
+      }
+    } catch {
+      setSubscribeStatus('error');
+    }
+  };
+
+  const createLetterBodies = useCallback((containerWidth: number, offsetX: number = 0, offsetY: number = 0) => {
     const { Bodies, World } = Matter;
     const world = engineRef.current?.world;
     if (!world) return;
@@ -91,21 +115,18 @@ export default function Home() {
     const config = getResponsiveConfig(containerWidth);
     const { titleFontSize, descFontSize, lineHeight, descLineHeight, descriptionLines } = config;
 
-    // Canvas extends beyond container on each side
-    const paddingOffset = CANVAS_EXTENSION;
-
-    // Title lines
+    // Title lines - positioned relative to hero section
     const titleLines = [
-      { text: 'AMMAN VEDI', fontSize: titleFontSize, y: 50 },
-      { text: 'SOFTWARE ENGINEER', fontSize: titleFontSize, y: 50 + lineHeight },
+      { text: 'AMMAN VEDI', fontSize: titleFontSize, y: offsetY + 50 },
+      { text: 'SOFTWARE ENGINEER', fontSize: titleFontSize, y: offsetY + 50 + lineHeight },
     ];
 
     // Description lines - start after title with some gap
-    const descStartY = 50 + lineHeight * 2 + 40; // gap after title
+    const descStartY = offsetY + 50 + lineHeight * 2 + 40; // gap after title
 
     titleLines.forEach(({ text, fontSize, y }) => {
       const charWidth = fontSize * 0.62;
-      const startX = paddingOffset + charWidth / 2;
+      const startX = offsetX + charWidth / 2;
 
       for (let i = 0; i < text.length; i++) {
         const char = text[i];
@@ -136,7 +157,7 @@ export default function Home() {
       const fontSize = descFontSize;
       const y = descStartY + lineIndex * descLineHeight;
       const charWidth = fontSize * 0.62;
-      const startX = paddingOffset + charWidth / 2;
+      const startX = offsetX + charWidth / 2;
 
       for (let i = 0; i < text.length; i++) {
         const char = text[i];
@@ -163,7 +184,7 @@ export default function Home() {
     });
   }, []);
 
-  const createWalls = useCallback((width: number, height: number) => {
+  const createWalls = useCallback((width: number) => {
     const { Bodies, World } = Matter;
     const world = engineRef.current?.world;
     if (!world) return [];
@@ -174,6 +195,8 @@ export default function Home() {
     });
 
     const wallThickness = 100;
+    // Extend walls far beyond viewport so interaction works from anywhere on screen
+    const extendedHeight = 2000; // Large enough to cover full page scroll
     const wallOptions = {
       isStatic: true,
       render: {
@@ -183,10 +206,14 @@ export default function Home() {
     };
 
     const walls = [
-      Bodies.rectangle(width / 2, height + wallThickness / 2, width * 2, wallThickness, wallOptions),
+      // Floor - far below viewport
+      Bodies.rectangle(width / 2, extendedHeight + wallThickness / 2, width * 2, wallThickness, wallOptions),
+      // Ceiling - stays at top
       Bodies.rectangle(width / 2, -wallThickness / 2, width * 2, wallThickness, wallOptions),
-      Bodies.rectangle(-wallThickness / 2, height / 2, wallThickness, height * 2, wallOptions),
-      Bodies.rectangle(width + wallThickness / 2, height / 2, wallThickness, height * 2, wallOptions),
+      // Left wall - extended height
+      Bodies.rectangle(-wallThickness / 2, extendedHeight / 2, wallThickness, extendedHeight * 2, wallOptions),
+      // Right wall - extended height
+      Bodies.rectangle(width + wallThickness / 2, extendedHeight / 2, wallThickness, extendedHeight * 2, wallOptions),
     ];
 
     World.add(world, walls);
@@ -240,18 +267,16 @@ export default function Home() {
     });
     engineRef.current = engine;
 
-    const heroRect = heroRef.current.getBoundingClientRect();
-    const containerWidth = heroRect.width;
-    const height = heroRect.height;
-    // Canvas is extended beyond container on both sides
-    const canvasWidth = containerWidth + CANVAS_EXTENSION * 2;
+    // Use full viewport for canvas
+    const canvasWidth = window.innerWidth;
+    const canvasHeight = window.innerHeight;
 
     const render = Render.create({
       element: sceneRef.current,
       engine: engine,
       options: {
         width: canvasWidth,
-        height,
+        height: canvasHeight,
         wireframes: false,
         background: 'transparent',
         pixelRatio: window.devicePixelRatio || 1,
@@ -259,8 +284,11 @@ export default function Home() {
     });
     renderRef.current = render;
 
-    createWalls(canvasWidth, height);
-    createLetterBodies(containerWidth);
+    // Get hero position for letter placement
+    const heroRect = heroRef.current.getBoundingClientRect();
+
+    createWalls(canvasWidth);
+    createLetterBodies(heroRect.width, heroRect.left, heroRect.top);
 
     const mouseBody = Bodies.circle(0, 0, 15, {
       isStatic: true,
@@ -272,6 +300,7 @@ export default function Home() {
     mouseBodyRef.current = mouseBody;
     World.add(engine.world, mouseBody);
 
+    // Listen on document so interaction works from anywhere on screen
     const handleMouseMove = (event: MouseEvent) => {
       if (mouseBodyRef.current && render.canvas) {
         const rect = render.canvas.getBoundingClientRect();
@@ -296,9 +325,10 @@ export default function Home() {
       handleTouchMove(event);
     };
 
-    render.canvas.addEventListener('mousemove', handleMouseMove);
-    render.canvas.addEventListener('touchmove', handleTouchMove, { passive: true });
-    render.canvas.addEventListener('touchstart', handleTouchStart, { passive: true });
+    // Add listeners to document for full-screen interaction
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('touchmove', handleTouchMove, { passive: true });
+    document.addEventListener('touchstart', handleTouchStart, { passive: true });
 
     Events.on(render, 'afterRender', () => {
       const ctx = render.context;
@@ -329,24 +359,24 @@ export default function Home() {
 
     const handleResize = () => {
       if (!heroRef.current) return;
+      
+      const newCanvasWidth = window.innerWidth;
+      const newCanvasHeight = window.innerHeight;
       const heroRect = heroRef.current.getBoundingClientRect();
-      const newContainerWidth = heroRect.width;
-      const newHeight = heroRect.height;
-      const newCanvasWidth = newContainerWidth + CANVAS_EXTENSION * 2;
 
       render.canvas.width = newCanvasWidth * (window.devicePixelRatio || 1);
-      render.canvas.height = newHeight * (window.devicePixelRatio || 1);
+      render.canvas.height = newCanvasHeight * (window.devicePixelRatio || 1);
       render.canvas.style.width = `${newCanvasWidth}px`;
-      render.canvas.style.height = `${newHeight}px`;
+      render.canvas.style.height = `${newCanvasHeight}px`;
       render.options.width = newCanvasWidth;
-      render.options.height = newHeight;
+      render.options.height = newCanvasHeight;
 
       // Always update walls
-      createWalls(newCanvasWidth, newHeight);
+      createWalls(newCanvasWidth);
 
       if (!hasBeenTouchedRef.current) {
         // Text hasn't been touched - recreate at new positions
-        createLetterBodies(newContainerWidth);
+        createLetterBodies(heroRect.width, heroRect.left, heroRect.top);
       }
       // If text has been touched, keep it where it is (walls will contain it)
     };
@@ -355,9 +385,9 @@ export default function Home() {
 
     return () => {
       window.removeEventListener('resize', handleResize);
-      render.canvas.removeEventListener('mousemove', handleMouseMove);
-      render.canvas.removeEventListener('touchmove', handleTouchMove);
-      render.canvas.removeEventListener('touchstart', handleTouchStart);
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('touchmove', handleTouchMove);
+      document.removeEventListener('touchstart', handleTouchStart);
       Render.stop(render);
       Runner.stop(runner);
       World.clear(engine.world, false);
@@ -369,8 +399,15 @@ export default function Home() {
 
   return (
     <main className="min-h-screen bg-[#FAF6F0]">
-      <div className="max-w-2xl mx-auto px-6">
-        {/* Hero + Description Section */}
+      {/* Full-screen physics canvas layer */}
+      <div 
+        ref={sceneRef} 
+        className="fixed inset-0 pointer-events-none z-10"
+        style={{ pointerEvents: 'none' }}
+      />
+      
+      <div className="max-w-2xl mx-auto px-6 relative">
+        {/* Hero + Description Section - invisible placeholder for layout */}
         <div ref={heroRef} className="relative w-full h-[320px] sm:h-[280px] md:h-[240px]">
           {/* Shadow text - reserves space, invisible */}
           <div className="invisible flex flex-col items-start justify-start pt-[50px] h-full font-mono">
@@ -386,9 +423,6 @@ export default function Home() {
               <span className="block">Line placeholder</span>
             </div>
           </div>
-          
-          {/* Matter.js canvas overlays this area - extends beyond padding for full interaction */}
-          <div ref={sceneRef} className="absolute inset-y-0 -left-[200px] -right-[200px]" />
         </div>
 
         {/* Blog Posts Section */}
@@ -417,6 +451,40 @@ export default function Home() {
               </motion.article>
             ))}
           </div>
+        </motion.section>
+
+        {/* Email Subscription */}
+        <motion.section
+          className="py-8 border-t border-[#1E3A8A]/10"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 1.0 }}
+        >
+          {subscribeStatus === 'success' ? (
+            <p className="font-mono text-[14px] text-[#1E3A8A]">subscribed!</p>
+          ) : (
+            <form onSubmit={handleSubscribe} className="flex gap-3">
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="your@email.com"
+                required
+                disabled={subscribeStatus === 'loading'}
+                className="flex-1 font-mono text-[14px] text-[#1E3A8A] bg-transparent border-b border-[#1E3A8A]/30 py-2 px-0 placeholder:text-[#1E3A8A]/40 focus:outline-none focus:border-[#1E3A8A] transition-colors disabled:opacity-50"
+              />
+              <button
+                type="submit"
+                disabled={subscribeStatus === 'loading'}
+                className="font-mono text-[14px] text-[#1E3A8A] hover:underline disabled:opacity-50 disabled:no-underline"
+              >
+                {subscribeStatus === 'loading' ? '...' : 'subscribe'}
+              </button>
+            </form>
+          )}
+          {subscribeStatus === 'error' && (
+            <p className="font-mono text-[12px] text-red-600 mt-2">something went wrong, try again</p>
+          )}
         </motion.section>
       </div>
 
